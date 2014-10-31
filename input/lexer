@@ -1,0 +1,178 @@
+import java.util.*;
+import java.io.*;
+
+/* semantic value of token returned by scanner */
+public class lexer
+{
+	public static void main (String[] args) throws IOException
+	{
+		BufferedReader reader = new BufferedReader(new FileReader(args[0]));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(args[1]));
+		Yylex yy = new Yylex (reader);
+		while(true)
+		{
+			String x =yy.next_token();
+			if(x==null)
+				break;
+			writer.write(x);	
+			writer.write('\n');
+		}
+		reader.close();
+		writer.close();
+	}
+}
+%%
+%function next_token
+%type String
+
+%eofval{
+  return null;
+%eofval}
+
+%{
+  public String sourceFilename;
+%}
+
+%line
+%char
+%state COMMENTS
+%state COMMENTSBLOCK1
+%state COMMENTSBLOCK2
+ALPHA=[A-Za-z_]
+DIGIT=[0-9]
+ALPHA_NUMERIC= (({ALPHA}+)({DIGIT}*)+)
+ID = {ALPHA_NUMERIC}*
+STR = \"(([^\"]*)?)\"
+CHR = \'(\\?)([^\']?)\'
+WHITE_SPACE=([\ \n\r\t\f\b])+
+KEYWORD = abstract|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|super|switch|synchronized|this|throw|throws|transient |try|void|volatile|while
+COMMENTS=//[^\n]* \n
+%%
+
+<YYINITIAL> "//" {
+  yybegin(COMMENTS);
+}
+<COMMENTS> [^\n] {
+}
+<COMMENTS> [\n] {
+  yybegin(YYINITIAL);
+}
+
+
+<YYINITIAL> "/*" {
+  	yybegin(COMMENTSBLOCK1);
+}
+
+<COMMENTSBLOCK1> "*" {
+  	yybegin(COMMENTSBLOCK2);
+}
+<COMMENTSBLOCK2> "/" {
+	yybegin(YYINITIAL);
+}
+
+<COMMENTSBLOCK1> [^*] {
+  	yybegin(COMMENTSBLOCK1);
+}
+<COMMENTSBLOCK2> [^/] {
+	yybegin(COMMENTSBLOCK1);
+}
+
+
+<YYINITIAL> {WHITE_SPACE} { }
+
+
+<YYINITIAL> "*=" { 
+  return yyline+":"+yychar+"\tNoCategory\t*="; 
+}
+
+<YYINITIAL> "/=" { 
+  return yyline+":"+yychar+"\tNoCategory\t/="; 
+}
+
+<YYINITIAL> "%=" { 
+  return yyline+":"+yychar+"\tNoCategory\t%="; 
+}
+
+<YYINITIAL> "+=" { 
+  return yyline+":"+yychar+"\tNoCategory\t+="; 
+}
+
+<YYINITIAL> "-=" { 
+  return yyline+":"+yychar+"\tNoCategory\t-="; 
+}
+
+<YYINITIAL> "<<=" { 
+  return yyline+":"+yychar+"\tNoCategory\t<<="; 
+}
+
+<YYINITIAL> ">>=" { 
+  return yyline+":"+yychar+"\tNoCategory\t>>="; 
+}
+
+<YYINITIAL> ">>>=" { 
+  return yyline+":"+yychar+"\tNoCategory\t>>>="; 
+}
+
+<YYINITIAL> "&=" { 
+  return yyline+":"+yychar+"\tNoCategory\t&="; 
+}
+
+<YYINITIAL> "^=" { 
+  return yyline+":"+yychar+"\tNoCategory\t^="; 
+}
+
+<YYINITIAL> "|=" { 
+  return yyline+":"+yychar+"\tNoCategory\t|="; 
+}
+
+<YYINITIAL> "<=" { 
+  return yyline+":"+yychar+"\tNoCategory\t<="; 
+}
+
+<YYINITIAL> ">=" { 
+  return yyline+":"+yychar+"\tNoCategory\t>="; 
+}
+
+<YYINITIAL> "++" { 
+  return yyline+":"+yychar+"\tNoCategory\t++"; 
+}
+
+<YYINITIAL> "--" { 
+  return yyline+":"+yychar+"\tNoCategory\t--"; 
+}
+
+<YYINITIAL> "==" { 
+  return yyline+":"+yychar+"\tNoCategory\t=="; 
+}
+
+<YYINITIAL> "!=" { 
+  return yyline+":"+yychar+"\tNoCategory\t!="; 
+}
+
+<YYINITIAL> "||" { 
+  return yyline+":"+yychar+"\tNoCategory\t||"; 
+}
+
+<YYINITIAL> "&&" { 
+  return yyline+":"+yychar+"\tNoCategory\t&&"; 
+}
+
+<YYINITIAL> {KEYWORD} { 
+  return yyline+":"+yychar+"\tNoCategory\t"+yytext();
+}
+
+<YYINITIAL> {ID} { 
+  return yyline+":"+yychar+"\tIdentifier\t"+yytext();
+}
+
+<YYINITIAL> {STR} { 
+  return yyline+":"+yychar+"\tString\t"+yytext();
+}
+
+<YYINITIAL> {CHR} { 
+  return yyline+":"+yychar+"\tCharacter\t"+yytext();
+}
+
+<YYINITIAL> . { 
+  return yyline+":"+yychar+"\tNoCategory\t"+yytext(); 
+}
